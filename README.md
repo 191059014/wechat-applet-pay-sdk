@@ -22,7 +22,7 @@
  * 微信订单查询接口入参
  *
  * @author Mr.Huang
- * @version v0.1, WeChatPayOrderQueryRequest.java, 2020/6/23 14:24, create by huangbiao.
+ * @version v0.1, WeChatPayOrderQueryRequest.java, 2020/6/23 14:24, create by Mr.Huang.
  */
 @Data
 @Builder
@@ -84,7 +84,7 @@ public class WeChatPayOrderQueryRequest implements Serializable {
  * 微信支付工具类
  *
  * @author Mr.Huang
- * @version v0.1, WechatPayUtils.java, 2020/6/24 15:32, create by huangbiao.
+ * @version v0.1, WechatPayUtils.java, 2020/6/24 15:32, create by Mr.Huang.
  */
 public class WechatPayUtils {
 
