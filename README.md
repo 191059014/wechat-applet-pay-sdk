@@ -8,6 +8,7 @@
 |   微信小程序支付SDK与DEMO下载   |   https://pay.weixin.qq.com/wiki/doc/api/jsapi.php?chapter=11_1   |
 | 在线验证签名 | https://pay.weixin.qq.com/wiki/doc/api/micropay.php?chapter=20_1 |
 | 沙箱环境 | https://pay.weixin.qq.com/wiki/doc/api/jsapi.php?chapter=23_1&index=1 |
+| 推荐一个感觉还不错的sdk（有小坑，大体还不错） | https://github.com/YClimb/wxpay-sdk |
 ### 目前涵盖功能  
 |   方法名	   |   说明 |
 | ---- | ---- |
