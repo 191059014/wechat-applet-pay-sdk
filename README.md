@@ -5,6 +5,9 @@
 |   描述   |   地址   |
 | ---- | ---- |
 |   微信小程序支付官方文档   |   https://pay.weixin.qq.com/wiki/doc/api/wxa/wxa_api.php?chapter=7_3&index=1   |
+|   微信小程序支付SDK与DEMO下载   |   https://pay.weixin.qq.com/wiki/doc/api/jsapi.php?chapter=11_1   |
+| 在线验证签名 | https://pay.weixin.qq.com/wiki/doc/api/micropay.php?chapter=20_1 |
+| 沙箱环境 | https://pay.weixin.qq.com/wiki/doc/api/jsapi.php?chapter=23_1&index=1 |
 ### 目前涵盖功能  
 |   方法名	   |   说明 |
 | ---- | ---- |
