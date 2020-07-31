@@ -604,4 +604,4 @@ public class WechatPayUtils {
 
 }
 ```
-> 此项目只为记录踩坑经历，尤其是退款时证书的使用、退款解密过程等，希望小伙伴们主要关注接口调用核心逻辑（加解密，证书，签名等），其他的不太重要的小问题请多多包涵。
+> 此项目只为记录踩坑经历，尤其是退款时证书的使用、退款解密过程（windows环境下会出现aes解密失败：“java.security.InvalidKeyException: Illegal key size or default parameters”，需要下载官方的无限制文件）是指密钥长度是受限制的，java运行时环境读到的是受限的policy文件，这种限制是因为美国对软件出口的控制，需要下载local_policy.jar和US_export_policy.jar文件并替换${java_home}/jre/lib/security/ 下面的local_policy.jar和US_export_policy.jar，就不会报错了，linux上则没有这个问题，希望小伙伴们主要关注接口调用核心逻辑（加解密，证书，签名等），其他的不太重要的小问题请多多包涵。
