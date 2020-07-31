@@ -5,6 +5,10 @@
 |   描述   |   地址   |
 | ---- | ---- |
 |   微信小程序支付官方文档   |   https://pay.weixin.qq.com/wiki/doc/api/wxa/wxa_api.php?chapter=7_3&index=1   |
+|   微信小程序支付SDK与DEMO下载   |   https://pay.weixin.qq.com/wiki/doc/api/jsapi.php?chapter=11_1   |
+| 在线验证签名 | https://pay.weixin.qq.com/wiki/doc/api/micropay.php?chapter=20_1 |
+| 沙箱环境 | https://pay.weixin.qq.com/wiki/doc/api/jsapi.php?chapter=23_1&index=1 |
+| 推荐一个感觉还不错的sdk（有小坑，大体还不错） | https://github.com/YClimb/wxpay-sdk |
 ### 目前涵盖功能  
 |   方法名	   |   说明 |
 | ---- | ---- |
@@ -18,7 +22,7 @@
  * 微信订单查询接口入参
  *
  * @author Mr.Huang
- * @version v0.1, WeChatPayOrderQueryRequest.java, 2020/6/23 14:24, create by huangbiao.
+ * @version v0.1, WeChatPayOrderQueryRequest.java, 2020/6/23 14:24, create by Mr.Huang.
  */
 @Data
 @Builder
@@ -124,7 +128,7 @@ import java.util.concurrent.TimeUnit;
  * 微信支付工具类
  *
  * @author Mr.Huang
- * @version v0.1, WechatPayUtils.java, 2020/6/24 15:32, create by huangbiao.
+ * @version v0.1, WechatPayUtils.java, 2020/6/24 15:32, create by Mr.Huang.
  */
 public class WechatPayUtils {
 
