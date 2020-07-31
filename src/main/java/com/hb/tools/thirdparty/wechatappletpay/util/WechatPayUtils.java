@@ -1,7 +1,6 @@
 package com.hb.tools.thirdparty.wechatappletpay.util;
 
 import com.google.common.base.Stopwatch;
-import org.apache.commons.codec.Charsets;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -30,11 +29,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.security.KeyStore;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.security.Security;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
@@ -75,7 +76,7 @@ public class WechatPayUtils {
     /**
      * 微信签名类型：HMACSHA256
      */
-    public static final String SIGN_TYPE_HMACSHA256 = "HMACSHA256";
+    private static final String SIGN_TYPE_HMACSHA256 = "HMACSHA256";
 
     /**
      * 密钥算法
@@ -86,6 +87,21 @@ public class WechatPayUtils {
      * 加解密算法/工作模式/填充方式
      */
     private static final String ALGORITHM_MODE_PADDING = "AES/ECB/PKCS7Padding";
+
+    /**
+     * 沙箱环境
+     */
+    private static final String SANDBOX_URL = "/sandboxnew";
+
+    /**
+     * UTF-8
+     */
+    private static final String UTF_8 = "UTF-8";
+
+    /**
+     * ISO-8859-1
+     */
+    private static final String ISO_8859_1 = "ISO-8859-1";
 
     /**
      * 获取随机字符串 Nonce Str
@@ -141,21 +157,22 @@ public class WechatPayUtils {
     /**
      * 进行http请求
      *
-     * @param url      请求地址
-     * @param data     参数信息
-     * @param useCert  是否使用证书
-     * @param mchId    商户ID，当useCert为false的时候可不传
-     * @param certPath 证书路径，当useCert为false的时候可不传
+     * @param url              请求地址
+     * @param data             参数信息
+     * @param useCert          是否使用证书
+     * @param mchId            商户ID，当useCert为false的时候可不传
+     * @param certPathOrBase64 证书路径或者证书的base64信息，当useCert为false的时候可不传
      * @return 返回结果
      */
-    public static String request(String url, String data, boolean useCert, String mchId, String certPath) {
-        LOGGER.info("http请求开始，入参：{}={}={}={}={}", url, data, useCert, mchId, certPath);
+    public static String request(String url, String data, boolean useCert, String mchId, String certPathOrBase64) {
+        LOGGER.info("http请求开始，入参：{}={}={}={}={}", url, data, useCert, mchId, certPathOrBase64);
         Stopwatch sw = Stopwatch.createStarted();
         String result = "";
         try {
-            BasicHttpClientConnectionManager connectionManager = buildBasicHttpClientConnectionManager(useCert, mchId, certPath);
+            BasicHttpClientConnectionManager connectionManager = buildBasicHttpClientConnectionManagerOther(useCert, mchId, certPathOrBase64);
             if (connectionManager == null) {
-                throw new Exception("构建的BasicHttpClientConnectionManager为空");
+                LOGGER.info("构建的BasicHttpClientConnectionManager为空");
+                return result;
             }
             HttpClient httpClient = HttpClientBuilder.create()
                     .setConnectionManager(connectionManager)
@@ -163,12 +180,12 @@ public class WechatPayUtils {
             HttpPost httpPost = new HttpPost(url);
             RequestConfig requestConfig = RequestConfig.custom().setSocketTimeout(10 * 1000).setConnectTimeout(10 * 1000).build();
             httpPost.setConfig(requestConfig);
-            StringEntity postEntity = new StringEntity(data, Charsets.UTF_8.name());
+            StringEntity postEntity = new StringEntity(data, UTF_8);
             httpPost.addHeader("Content-Type", "text/xml");
             httpPost.setEntity(postEntity);
             HttpResponse httpResponse = httpClient.execute(httpPost);
             HttpEntity httpEntity = httpResponse.getEntity();
-            result = EntityUtils.toString(httpEntity, Charsets.UTF_8.name());
+            result = EntityUtils.toString(httpEntity, UTF_8);
         } catch (Exception e) {
             if (LOGGER.isErrorEnabled()) {
                 LOGGER.error("请求失败，原因：{}", LogExceptionWapper.getStackTrace(e));
@@ -188,10 +205,11 @@ public class WechatPayUtils {
     public static String reqInfoDecrypt(String source, String key) {
         String result = null;
         try {
-            byte[] keyBytes = md5(key);
-            String base64Decode = new String(Base64Utils.decodeFromString(source), Charsets.ISO_8859_1.toString());
-            byte[] bytes = aes(base64Decode.getBytes(Charsets.ISO_8859_1.toString()), keyBytes, Cipher.DECRYPT_MODE);
-            result = new String(bytes, Charsets.UTF_8.toString());
+            byte[] keyBytes = md5ToString(key).toLowerCase().getBytes();
+            Base64.Decoder decoder = Base64.getDecoder();
+            String base64Decode = new String(decoder.decode(source), ISO_8859_1);
+            byte[] bytes = aes(base64Decode.getBytes(ISO_8859_1), keyBytes, Cipher.DECRYPT_MODE);
+            result = new String(bytes, UTF_8);
         } catch (Exception e) {
             if (LOGGER.isErrorEnabled()) {
                 LOGGER.error("解密req_info失败，原因：{}", LogExceptionWapper.getStackTrace(e));
@@ -211,10 +229,10 @@ public class WechatPayUtils {
     public static String reqInfoEncrypt(String source, String key) {
         String result = null;
         try {
-            byte[] keyBytes = md5(key);
+            byte[] keyBytes = md5ToString(key).toLowerCase().getBytes();
             byte[] bytes = aes(source.getBytes(), keyBytes, Cipher.ENCRYPT_MODE);
-            String aes = new String(bytes, Charsets.ISO_8859_1.toString());
-            result = Base64Utils.encodeToString(aes.getBytes(Charsets.ISO_8859_1.toString()));
+            String aes = new String(bytes, ISO_8859_1);
+            result = Base64Utils.encodeToString(aes.getBytes(ISO_8859_1));
         } catch (Exception e) {
             if (LOGGER.isErrorEnabled()) {
                 LOGGER.error("加密req_info失败，原因：{}", LogExceptionWapper.getStackTrace(e));
@@ -276,11 +294,51 @@ public class WechatPayUtils {
     }
 
     /**
+     * 读取证书文件，并用base64简单加密（因为证书不建议放在项目里面，而且也不方便运维人员管理，这里将证书信息读取，放在项目里配置）
+     *
+     * @param certPath 证书路径
+     * @return base64后的证书信息
+     */
+    public static String getCertStringBase64(String certPath) {
+        File file = new File(certPath);
+        try (InputStream is = new FileInputStream(file)) {
+            byte[] certDataBytes = new byte[(int) file.length()];
+            is.read(certDataBytes);
+            return new String(Base64.getEncoder().encode(certDataBytes), ISO_8859_1);
+        } catch (Exception e) {
+            if (LOGGER.isErrorEnabled()) {
+                LOGGER.error("读取证书文件，并用base64简单加密，失败，原因：{}", LogExceptionWapper.getStackTrace(e));
+            }
+            return null;
+        }
+
+    }
+
+    /**
+     * 将base64后的证书信息加载到流中
+     *
+     * @param certStringBase64 base64后的证书信息
+     * @return InputStream
+     */
+    public static InputStream getCertStreamByBase64(String certStringBase64) {
+        byte[] certDataBytes;
+        try {
+            certDataBytes = Base64.getDecoder().decode(certStringBase64.getBytes(ISO_8859_1));
+            return new ByteArrayInputStream(certDataBytes);
+        } catch (UnsupportedEncodingException e) {
+            if (LOGGER.isErrorEnabled()) {
+                LOGGER.error("获取证书流信息失败，原因：{}", LogExceptionWapper.getStackTrace(e));
+            }
+            return null;
+        }
+    }
+
+    /**
      * 构建BasicHttpClientConnectionManager对象
      *
      * @param useCert  是否使用证书
      * @param mchId    商户ID
-     * @param certPath
+     * @param certPath 证书路径
      * @return BasicHttpClientConnectionManager对象
      */
     private static BasicHttpClientConnectionManager buildBasicHttpClientConnectionManager(boolean useCert, String mchId, String certPath) {
@@ -288,6 +346,66 @@ public class WechatPayUtils {
         if (useCert) {
             try {
                 InputStream certStream = getCertStream(certPath);
+                // 证书
+                char[] password = mchId.toCharArray();
+                KeyStore ks = KeyStore.getInstance("PKCS12");
+                ks.load(certStream, password);
+
+                // 实例化密钥库 & 初始化密钥工厂
+                KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+                kmf.init(ks, password);
+
+                // 创建 SSLContext
+                SSLContext sslContext = SSLContext.getInstance("TLS");
+                sslContext.init(kmf.getKeyManagers(), null, new SecureRandom());
+
+                SSLConnectionSocketFactory sslConnectionSocketFactory = new SSLConnectionSocketFactory(
+                        sslContext,
+                        new String[]{"TLSv1"},
+                        null,
+                        new DefaultHostnameVerifier());
+
+                return new BasicHttpClientConnectionManager(
+                        RegistryBuilder.<ConnectionSocketFactory>create()
+                                .register("http", PlainConnectionSocketFactory.getSocketFactory())
+                                .register("https", sslConnectionSocketFactory)
+                                .build(),
+                        null,
+                        null,
+                        null
+                );
+            } catch (Exception e) {
+                if (LOGGER.isErrorEnabled()) {
+                    LOGGER.error("构建BasicHttpClientConnectionManager对象失败，原因：{}", LogExceptionWapper.getStackTrace(e));
+                }
+                return null;
+            }
+
+        }
+        return new BasicHttpClientConnectionManager(
+                RegistryBuilder.<ConnectionSocketFactory>create()
+                        .register("http", PlainConnectionSocketFactory.getSocketFactory())
+                        .register("https", SSLConnectionSocketFactory.getSocketFactory())
+                        .build(),
+                null,
+                null,
+                null
+        );
+    }
+
+    /**
+     * 构建BasicHttpClientConnectionManager对象
+     *
+     * @param useCert    是否使用证书
+     * @param mchId      商户ID
+     * @param certBase64 证书的base64信息
+     * @return BasicHttpClientConnectionManager对象
+     */
+    private static BasicHttpClientConnectionManager buildBasicHttpClientConnectionManagerOther(boolean useCert, String mchId, String certBase64) {
+        BasicHttpClientConnectionManager connManager;
+        if (useCert) {
+            try {
+                InputStream certStream = getCertStreamByBase64(certBase64);
                 // 证书
                 char[] password = mchId.toCharArray();
                 KeyStore ks = KeyStore.getInstance("PKCS12");
@@ -360,7 +478,7 @@ public class WechatPayUtils {
      */
     private static byte[] md5(String data) throws Exception {
         MessageDigest md = MessageDigest.getInstance("MD5");
-        return md.digest(data.getBytes("UTF-8"));
+        return md.digest(data.getBytes(UTF_8));
     }
 
     /**
@@ -373,9 +491,9 @@ public class WechatPayUtils {
     private static String HMACSHA256(String data, String key) {
         try {
             Mac sha256_HMAC = Mac.getInstance("HmacSHA256");
-            SecretKeySpec secret_key = new SecretKeySpec(key.getBytes("UTF-8"), "HmacSHA256");
+            SecretKeySpec secret_key = new SecretKeySpec(key.getBytes(UTF_8), "HmacSHA256");
             sha256_HMAC.init(secret_key);
-            byte[] array = sha256_HMAC.doFinal(data.getBytes("UTF-8"));
+            byte[] array = sha256_HMAC.doFinal(data.getBytes(UTF_8));
             StringBuilder sb = new StringBuilder();
             for (byte item : array) {
                 sb.append(Integer.toHexString((item & 0xFF) | 0x100).substring(1, 3));
@@ -387,6 +505,18 @@ public class WechatPayUtils {
             }
             return null;
         }
+    }
+
+    /**
+     * 获取请求的全路径
+     *
+     * @param host      host
+     * @param url       url
+     * @param isSandBox 是否是沙箱环境
+     * @return 请求地址
+     */
+    public static String getFullRequestUrl(String host, String url, boolean isSandBox) {
+        return isSandBox ? host + SANDBOX_URL + url : host + url;
     }
 
 }

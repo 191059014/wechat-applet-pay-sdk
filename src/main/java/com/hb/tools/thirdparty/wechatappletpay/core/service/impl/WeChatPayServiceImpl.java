@@ -38,6 +38,11 @@ public class WeChatPayServiceImpl implements WeChatPayService {
         return weChatPayIntegration.refund(request);
     }
 
+    @Override
+    public String getSignKey(String nonceStr) {
+        return weChatPayIntegration.getSignKey(nonceStr);
+    }
+
 }
 
     

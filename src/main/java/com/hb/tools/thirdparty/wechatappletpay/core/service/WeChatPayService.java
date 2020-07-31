@@ -39,4 +39,12 @@ public interface WeChatPayService {
      */
     WeChatPayRefundResponse refund(WeChatPayRefundRequest request);
 
+    /**
+     * 获取沙箱签名key
+     *
+     * @param nonceStr 随机字符串
+     * @return 沙箱签名key
+     */
+    String getSignKey(String nonceStr);
+
 }
